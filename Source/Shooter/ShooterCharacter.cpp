@@ -10,6 +10,8 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Item.h"
+#include "Components/WidgetComponent.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
@@ -44,7 +46,7 @@ AShooterCharacter::AShooterCharacter() :
 	bShouldFire(true),
 	bFireButtonPressed(false)
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Create a camera boom (pulls in towards the character if there is a collision)
@@ -196,7 +198,7 @@ void AShooterCharacter::FireWeapon()
 }
 
 bool AShooterCharacter::GetBeamEndLocation(
-	const FVector& MuzzleSocketLocation, 
+	const FVector& MuzzleSocketLocation,
 	FVector& OutBeamLocation)
 {
 	// Get current size of the viewport
@@ -323,9 +325,9 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 	{
 		// Spread the crosshairs slowly while in air
 		CrosshairInAirFactor = FMath::FInterpTo(
-			CrosshairInAirFactor, 
-			2.25f, 
-			DeltaTime, 
+			CrosshairInAirFactor,
+			2.25f,
+			DeltaTime,
 			2.25f);
 	}
 	else // Character is on the ground
@@ -358,9 +360,9 @@ void AShooterCharacter::CalculateCrosshairSpread(float DeltaTime)
 			30.f);
 	}
 
-	CrosshairSpreadMultiplier = 
-		0.5f + 
-		CrosshairVelocityFactor + 
+	CrosshairSpreadMultiplier =
+		0.5f +
+		CrosshairVelocityFactor +
 		CrosshairInAirFactor -
 		CrosshairAimFactor;
 }
@@ -399,6 +401,45 @@ void AShooterCharacter::AutoFireReset()
 	}
 }
 
+bool AShooterCharacter::TraceUnderCrosshairs(FHitResult& OutHitResult)
+{
+	// Get Viewport Size
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	// Get screen space location of crosshairs
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+
+	// Get world position and direction of crosshairs
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection);
+
+	if (bScreenToWorld)
+	{
+		// Trace from Crosshair world location outward
+		const FVector Start{ CrosshairWorldPosition };
+		const FVector End{ Start + CrosshairWorldDirection * 50'000.f };
+		GetWorld()->LineTraceSingleByChannel(
+			OutHitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_Visibility);
+		if (OutHitResult.bBlockingHit)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -411,6 +452,17 @@ void AShooterCharacter::Tick(float DeltaTime)
 	// Calculate crosshair spread multiplier
 	CalculateCrosshairSpread(DeltaTime);
 
+	FHitResult ItemTraceResult;
+	TraceUnderCrosshairs(ItemTraceResult);
+	if (ItemTraceResult.bBlockingHit)
+	{
+		AItem* HitItem = Cast<AItem>(ItemTraceResult.Actor);
+		if (HitItem && HitItem->GetPickupWidget())
+		{
+			// Show Item's Pickup Widget
+			HitItem->GetPickupWidget()->SetVisibility(true);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -429,14 +481,14 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this, 
+	PlayerInputComponent->BindAction("FireButton", IE_Pressed, this,
 		&AShooterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("FireButton", IE_Released, this,
 		&AShooterCharacter::FireButtonReleased);
 
-	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this, 
+	PlayerInputComponent->BindAction("AimingButton", IE_Pressed, this,
 		&AShooterCharacter::AimingButtonPressed);
-	PlayerInputComponent->BindAction("AimingButton", IE_Released, this, 
+	PlayerInputComponent->BindAction("AimingButton", IE_Released, this,
 		&AShooterCharacter::AimingButtonReleased);
 }
 
