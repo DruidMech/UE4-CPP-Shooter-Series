@@ -153,7 +153,7 @@ private:
 
 	/** Smoke trail for bullets */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
-		UParticleSystem* BeamParticles;
+	UParticleSystem* BeamParticles;
 
 	/** True when aiming */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
@@ -209,6 +209,10 @@ private:
 
 	/** Number of overlapped AItems */
 	int8 OverlappedItemCount;
+
+	/** The AItem we hit last frame */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = "true"))
+	class AItem* TraceHitItemLastFrame;
 
 public:
 	/** Returns CameraBoom subobject */
