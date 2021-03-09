@@ -24,7 +24,7 @@ AItem::AItem() :
 	CollisionBox->SetupAttachment(ItemMesh);
 	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(
-		ECollisionChannel::ECC_Visibility, 
+		ECollisionChannel::ECC_Visibility,
 		ECollisionResponse::ECR_Block);
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
@@ -134,7 +134,7 @@ void AItem::SetItemProperties(EItemState State)
 		// Set CollisionBox properties
 		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		CollisionBox->SetCollisionResponseToChannel(
-			ECollisionChannel::ECC_Visibility, 
+			ECollisionChannel::ECC_Visibility,
 			ECollisionResponse::ECR_Block);
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
@@ -159,7 +159,7 @@ void AItem::SetItemProperties(EItemState State)
 		ItemMesh->SetEnableGravity(true);
 		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		ItemMesh->SetCollisionResponseToChannel(
-			ECollisionChannel::ECC_WorldStatic, 
+			ECollisionChannel::ECC_WorldStatic,
 			ECollisionResponse::ECR_Block);
 		// Set AreaSphere properties
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
