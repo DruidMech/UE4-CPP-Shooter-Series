@@ -15,7 +15,6 @@
 #include "Weapon.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
-#include "DrawDebugHelpers.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
@@ -366,6 +365,7 @@ void AShooterCharacter::AutoFireReset()
 	else
 	{
 		// Reload Weapon
+		ReloadWeapon();
 	}
 }
 
@@ -583,6 +583,45 @@ void AShooterCharacter::PlayGunfireMontage()
 	}
 }
 
+void AShooterCharacter::ReloadButtonPressed()
+{
+	ReloadWeapon();
+}
+
+void AShooterCharacter::ReloadWeapon()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (EquippedWeapon == nullptr) return;
+
+	// Do we have ammo of the correct type?
+	if (CarryingAmmo())
+	{
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && ReloadMontage)
+		{
+			AnimInstance->Montage_Play(ReloadMontage);
+			AnimInstance->Montage_JumpToSection(
+				EquippedWeapon->GetReloadMontageSection());
+		}
+	}
+
+}
+
+bool AShooterCharacter::CarryingAmmo()
+{
+	if (EquippedWeapon == nullptr) return false;
+
+	auto AmmoType = EquippedWeapon->GetAmmoType();
+
+	if (AmmoMap.Contains(AmmoType))
+	{
+		return AmmoMap[AmmoType] > 0;
+	}
+
+	return false;
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -628,6 +667,44 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		&AShooterCharacter::SelectButtonPressed);
 	PlayerInputComponent->BindAction("Select", IE_Released, this,
 		&AShooterCharacter::SelectButtonReleased);
+
+	PlayerInputComponent->BindAction("ReloadButton", IE_Pressed, this,
+		&AShooterCharacter::ReloadButtonPressed);
+}
+
+void AShooterCharacter::FinishReloading()
+{
+	// Update the Combat State
+	CombatState = ECombatState::ECS_Unoccupied;
+	if (EquippedWeapon == nullptr) return;
+	const auto AmmoType{ EquippedWeapon->GetAmmoType() };
+
+	// Update the AmmoMap
+	if (AmmoMap.Contains(AmmoType))
+	{
+		// Amount of ammo the Character is carrying of the EquippedWeapon type
+		int32 CarriedAmmo = AmmoMap[AmmoType];
+
+		// Space left in the magazine of EquippedWeapon
+		const int32 MagEmptySpace = 
+			EquippedWeapon->GetMagazineCapacity() - 
+			EquippedWeapon->GetAmmo();
+
+		if (MagEmptySpace > CarriedAmmo)
+		{
+			// Reload the magazine with all the ammo we are carrying
+			EquippedWeapon->ReloadAmmo(CarriedAmmo);
+			CarriedAmmo = 0;
+			AmmoMap.Add(AmmoType, CarriedAmmo);
+		}
+		else
+		{
+			// fill the magazine
+			EquippedWeapon->ReloadAmmo(MagEmptySpace);
+			CarriedAmmo -= MagEmptySpace;
+			AmmoMap.Add(AmmoType, CarriedAmmo);
+		}
+	}
 }
 
 float AShooterCharacter::GetCrosshairSpreadMultiplier() const
@@ -660,7 +737,7 @@ FVector AShooterCharacter::GetCameraInterpLocation()
 
 void AShooterCharacter::GetPickupItem(AItem* Item)
 {
-	auto Weapon = Cast<AWeapon>(Item); 
+	auto Weapon = Cast<AWeapon>(Item);
 	if (Weapon)
 	{
 		SwapWeapon(Weapon);
