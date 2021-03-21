@@ -22,7 +22,7 @@ public:
 	virtual void NativeInitializeAnimation() override;
 
 protected:
-
+public:
 	/** Handle turning in place variables */
 	void TurnInPlace();
 
@@ -67,4 +67,11 @@ private:
 	/** Rotation curve value last frame */
 	float RotationCurveLastFrame;
 
+	/** The pitch of the aim rotaiton, used for Aim Offset */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	float Pitch;
+
+	/** True when reloading, used to prevent Aim Offset while reloading */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	bool bReloading;
 };
