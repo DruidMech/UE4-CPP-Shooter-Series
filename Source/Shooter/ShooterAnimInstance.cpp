@@ -53,7 +53,7 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 			MovementRotation,
 			AimRotation).Yaw;
 
-		
+
 		if (ShooterCharacter->GetVelocity().Size() > 0.f)
 		{
 			LastMovementOffsetYaw = MovementOffsetYaw;
@@ -75,6 +75,11 @@ void UShooterAnimInstance::TurnInPlace()
 	if (Speed > 0)
 	{
 		// Don't want to turn in place; Character is moving
+		RootYawOffset = 0.f;
+		CharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
+		CharacterYawLastFrame = CharacterYaw;
+		RotationCurveLastFrame = 0.f;
+		RotationCurve = 0.f;
 	}
 	else
 	{
