@@ -33,6 +33,7 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 	}
 	if (ShooterCharacter)
 	{
+		bCrouching = ShooterCharacter->GetCrouching();
 		bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
 
 		// Get the lateral speed of the character from velocity
@@ -137,8 +138,6 @@ void UShooterAnimInstance::TurnInPlace()
 				RootYawOffset > 0 ? RootYawOffset -= YawExcess : RootYawOffset += YawExcess;
 			}
 		}
-
-		if (GEngine) GEngine->AddOnScreenDebugMessage(1, -1, FColor::Cyan, FString::Printf(TEXT("RootYawOffset: %f"), RootYawOffset));
 	}
 }
 
@@ -153,18 +152,5 @@ void UShooterAnimInstance::Lean(float DeltaTime)
 	const float Target{ Delta.Yaw / DeltaTime };
 	const float Interp{ FMath::FInterpTo(YawDelta, Target, DeltaTime, 6.f) };
 	YawDelta = FMath::Clamp(Interp, -90.f, 90.f);
-
-	if (GEngine) GEngine->AddOnScreenDebugMessage(
-		2, 
-		-1, 
-		FColor::Cyan, 
-		FString::Printf(TEXT("YawDelta: %f"), 
-			YawDelta));
-	if (GEngine) GEngine->AddOnScreenDebugMessage(
-		2,
-		-1,
-		FColor::Cyan,
-		FString::Printf(TEXT("Delta.Yaw: %f"),
-			Delta.Yaw));
 
 }
