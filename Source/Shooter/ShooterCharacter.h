@@ -143,6 +143,8 @@ protected:
 	void Aim();
 	void StopAiming();
 
+	void PickupAmmo(class AAmmo* Ammo);
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
