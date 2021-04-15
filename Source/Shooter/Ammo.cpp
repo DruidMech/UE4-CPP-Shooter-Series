@@ -25,6 +25,7 @@ AAmmo::AAmmo()
 void AAmmo::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 
 void AAmmo::BeginPlay()
@@ -37,7 +38,6 @@ void AAmmo::BeginPlay()
 void AAmmo::SetItemProperties(EItemState State)
 {
 	Super::SetItemProperties(State);
-
 	switch (State)
 	{
 	case EItemState::EIS_Pickup:
@@ -85,6 +85,7 @@ void AAmmo::AmmoSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 		if (OverlappedCharacter)
 		{
 			StartItemCurve(OverlappedCharacter);
+			AmmoCollisionSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
 }
