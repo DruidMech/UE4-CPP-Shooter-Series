@@ -22,6 +22,9 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	/** Override of SetItemProperties so we can set AmmoMesh properties */
+	virtual void SetItemProperties(EItemState State) override;
+
 private:
 	/** Mesh for the ammo pickup */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Ammo, meta = (AllowPrivateAccess = "true"))
