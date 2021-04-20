@@ -74,7 +74,9 @@ AShooterCharacter::AShooterCharacter() :
 	bShouldPlayPickupSound(true),
 	bShouldPlayEquipSound(true),
 	PickupSoundResetTime(0.2f),
-	EquipSoundResetTime(0.2f)
+	EquipSoundResetTime(0.2f),
+	// Icon animation property
+	HighlightedSlot(-1)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -476,6 +478,25 @@ void AShooterCharacter::TraceForItems()
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItem>(ItemTraceResult.Actor);
+			const auto TraceHitWeapon = Cast<AWeapon>(TraceHitItem);
+			if (TraceHitWeapon)
+			{
+				if (HighlightedSlot == -1)
+				{
+					// Not currently highlighting a slot; highlight one
+					HighlightInventorySlot();
+				}
+			}
+			else
+			{
+				// Is a slot being highlighted?
+				if (HighlightedSlot != -1)
+				{
+					// UnHighlight the slot
+					UnHighlightInventorySlot();
+				}
+			}
+
 			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
 			{
 				TraceHitItem = nullptr;
@@ -922,6 +943,36 @@ void AShooterCharacter::ExchangeInventoryItems(int32 CurrentItemIndex, int32 New
 		}
 		NewWeapon->PlayEquipSound(true);
 	}
+}
+
+int32 AShooterCharacter::GetEmptyInventorySlot()
+{
+	for (int32 i = 0; i < Inventory.Num(); i++)
+	{
+		if (Inventory[i] == nullptr)
+		{
+			return i;
+		}
+	}
+	if (Inventory.Num() < INVENTORY_CAPACITY)
+	{
+		return Inventory.Num();
+	}
+	
+	return -1; // Inventory is full!
+}
+
+void AShooterCharacter::HighlightInventorySlot()
+{
+	const int32 EmptySlot{ GetEmptyInventorySlot() };
+	HighlightIconDelegate.Broadcast(EmptySlot, true);
+	HighlightedSlot = EmptySlot;
+}
+
+void AShooterCharacter::UnHighlightInventorySlot()
+{
+	HighlightIconDelegate.Broadcast(HighlightedSlot, false);
+	HighlightedSlot = -1;
 }
 
 int32 AShooterCharacter::GetInterpLocationIndex()
