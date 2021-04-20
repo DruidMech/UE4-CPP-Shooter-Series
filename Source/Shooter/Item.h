@@ -301,12 +301,26 @@ public:
 	void SetItemState(EItemState State);
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return ItemMesh; }
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
+	FORCEINLINE void SetPickupSound(USoundCue* Sound) { PickupSound = Sound; }
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
+	FORCEINLINE void SetEquipSound(USoundCue* Sound) { EquipSound = Sound; }
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
 	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; }
 	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }
 	FORCEINLINE void SetCharacter(AShooterCharacter* Char) { Character = Char; }
 	FORCEINLINE void SetCharacterInventoryFull(bool bFull) { bCharacterInventoryFull = bFull; }
+	FORCEINLINE void SetItemName(FString Name) { ItemName = Name; }
+	// Set item icon for the inventory
+	FORCEINLINE void SetIconItem(UTexture2D* Icon) { IconItem = Icon; }
+	// Set ammo icon for the pickup widget
+	FORCEINLINE void SetAmmoIcon(UTexture2D* Icon) { AmmoItem = Icon; }
+	FORCEINLINE void SetMaterialInstance(UMaterialInstance* Instance) { MaterialInstance = Instance; }
+	FORCEINLINE UMaterialInstance* GetMaterialInstance() const { return MaterialInstance; }
+	FORCEINLINE void SetDynamicMaterialInstance(UMaterialInstanceDynamic* Instance) { DynamicMaterialInstance = Instance; }
+	FORCEINLINE UMaterialInstanceDynamic* GetDynamicMaterialInstance() const { return DynamicMaterialInstance; }
+	FORCEINLINE FLinearColor GetGlowColor() const { return GlowColor; }
+	FORCEINLINE int32 GetMaterialIndex() const { return MaterialIndex; }
+	FORCEINLINE void SetMaterialIndex(int32 Index) { MaterialIndex = Index; }
 
 	/** Called from the AShooterCharacter class */
 	void StartItemCurve(AShooterCharacter* Char, bool bForcePlaySound = false);
