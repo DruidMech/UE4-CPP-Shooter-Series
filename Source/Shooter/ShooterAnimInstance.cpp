@@ -4,6 +4,8 @@
 #include "ShooterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Weapon.h"
+#include "WeaponType.h"
 
 UShooterAnimInstance::UShooterAnimInstance() :
 	Speed(0.f),
@@ -22,7 +24,9 @@ UShooterAnimInstance::UShooterAnimInstance() :
 	bReloading(false),
 	OffsetState(EOffsetState::EOS_Hip),
 	RecoilWeight(1.0f),
-	bTurningInPlace(false)
+	bTurningInPlace(false),
+	EquippedWeaponType(EWeaponType::EWT_MAX),
+	bShouldUseFABRIK(false)
 {
 
 }
@@ -38,6 +42,7 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		bCrouching = ShooterCharacter->GetCrouching();
 		bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
 		bEquipping = ShooterCharacter->GetCombatState() == ECombatState::ECS_Equipping;
+		bShouldUseFABRIK = ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied || ShooterCharacter->GetCombatState() == ECombatState::ECS_FireTimerInProgress;
 
 		// Get the lateral speed of the character from velocity
 		FVector Velocity{ ShooterCharacter->GetVelocity() };
@@ -88,6 +93,11 @@ void UShooterAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		else
 		{
 			OffsetState = EOffsetState::EOS_Hip;
+		}
+		// Check if ShooterCharacter has a valid EquippedWeapon
+		if (ShooterCharacter->GetEquippedWeapon())
+		{
+			EquippedWeaponType = ShooterCharacter->GetEquippedWeapon()->GetWeaponType();
 		}
 	}
 	TurnInPlace();
