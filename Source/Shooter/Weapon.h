@@ -104,6 +104,7 @@ protected:
 
 	void FinishMovingSlide();
 	void UpdateSlideDisplacement();
+
 private:
 	FTimerHandle ThrowWeaponTimer;
 	float ThrowWeaponTime;
