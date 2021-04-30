@@ -7,6 +7,7 @@
 #include "Weapon.h"
 #include "WeaponType.h"
 
+
 UShooterAnimInstance::UShooterAnimInstance() :
 	Speed(0.f),
 	bIsInAir(false),
