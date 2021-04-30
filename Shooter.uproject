@@ -13,6 +13,12 @@
 			]
 		}
 	],
+	"Plugins": [
+		{
+			"Name": "NiagaraExtras",
+			"Enabled": true
+		}
+	],
 	"TargetPlatforms": [
 		"Android",
 		"IOS",
