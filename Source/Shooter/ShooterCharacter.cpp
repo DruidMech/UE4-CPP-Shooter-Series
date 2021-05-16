@@ -21,7 +21,8 @@
 #include "Shooter.h"
 #include "BulletHitInterface.h"
 #include "Enemy.h"
-
+#include "EnemyController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() :
@@ -142,12 +143,42 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	if (Health - DamageAmount <= 0.f)
 	{
 		Health = 0.f;
+		Die();
+
+		auto EnemyController = Cast<AEnemyController>(EventInstigator);
+		if (EnemyController)
+		{
+			EnemyController->GetBlackboardComponent()->SetValueAsBool(
+				FName(TEXT("CharacterDead")),
+				true
+			);
+		}
 	}
 	else
 	{
 		Health -= DamageAmount;
 	}
 	return DamageAmount;
+}
+
+void AShooterCharacter::Die()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+		AnimInstance->Montage_JumpToSection(FName("DeathA"), DeathMontage);
+	}
+}
+
+void AShooterCharacter::FinishDeath()
+{
+	GetMesh()->bPauseAnims = true;
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (PC)
+	{
+		DisableInput(PC);
+	}
 }
 
 	// Called when the game starts or when spawned
@@ -1057,6 +1088,8 @@ void AShooterCharacter::UnHighlightInventorySlot()
 
 void AShooterCharacter::Stun()
 {
+	if (Health <= 0.f) return;
+
 	CombatState = ECombatState::ECS_Stunned;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
