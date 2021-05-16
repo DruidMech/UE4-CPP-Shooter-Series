@@ -182,6 +182,7 @@ void AEnemy::Die()
 			FName("Dead"),
 			true
 		);
+		EnemyController->StopMovement();
 	}
 }
 
