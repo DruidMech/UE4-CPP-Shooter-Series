@@ -1,1 +1,5 @@
 This folder contains code added in each Lecture. Lectures in which no C++ code was added to the project are not here.
+
+NOTE:
+
+There was an error with source control after Lecture 52 - Bullet Fire Aim Factor. The code for the Bullet Fire Aim Factor is missing from this point on in these Code Per Lesson files. However, you can still keep that code in your project and it will work just fine.
