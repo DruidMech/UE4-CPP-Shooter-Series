@@ -227,7 +227,8 @@ bool AShooterCharacter::GetBeamEndLocation(
 	// Perform a second trace, this time from the gun barrel
 	FHitResult WeaponTraceHit;
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
-	const FVector WeaponTraceEnd{ OutBeamLocation };
+	const FVector StartToEnd{ OutBeamLocation - WeaponTraceStart };
+	const FVector WeaponTraceEnd{ MuzzleSocketLocation + StartToEnd * 1.25f };
 	GetWorld()->LineTraceSingleByChannel(
 		WeaponTraceHit,
 		WeaponTraceStart,
