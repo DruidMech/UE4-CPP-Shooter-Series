@@ -93,6 +93,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AI Behavior", meta = (AllowPrivateAccess = "true"))
 	class UBehaviorTree* BehaviorTree;
 
+	UPROPERTY(EditAnywhere, Category = "AI Behavior", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	FVector PatrolPoint;
+
+	class AEnemyController* EnemyController;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
