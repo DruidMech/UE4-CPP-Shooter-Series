@@ -104,7 +104,8 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	FORCEINLINE FString GetHeadBone() const { return HeadBone; }
+	FORCEINLINE FString GetHeadBone() const { return HeadBone; } 
+	FORCEINLINE UBehaviorTree* GetBehaviorTree()const { return BehaviorTree; }
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowHitNumber(int32 Damage, FVector HitLocation, bool bHeadShot);
