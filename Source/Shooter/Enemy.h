@@ -90,7 +90,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	float HitNumberDestroyTime;
 
-	UPROPERTY(EditAnywhere, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "AI Behavior", meta = (AllowPrivateAccess = "true"))
 	class UBehaviorTree* BehaviorTree;
 
 public:	
