@@ -90,6 +90,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	float HitNumberDestroyTime;
 
+	UPROPERTY(EditAnywhere, Category = "AI Behavior", meta = (AllowPrivateAccess = "true"))
+	class UBehaviorTree* BehaviorTree;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
