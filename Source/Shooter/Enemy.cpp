@@ -10,6 +10,8 @@
 #include "DrawDebugHelpers.h"
 #include "EnemyController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Components/SphereComponent.h"
+#include "ShooterCharacter.h"
 
 // Sets default values
 AEnemy::AEnemy() :
@@ -24,24 +26,33 @@ AEnemy::AEnemy() :
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
+	AgroSphere->SetupAttachment(GetRootComponent());
+
 }
 
 // Called when the game starts or when spawned
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::AgroSphereOverlap);
 	
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
-
-	
+	FVector WorldPatrolPoint2 = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint2);
 
 	EnemyController = Cast<AEnemyController>(GetController());
 
 	if (EnemyController) {
-		//DrawDebugSphere(GetWorld(), WorldPatrolPoint, 25, 100, FColor::Red, true);
 		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint"), WorldPatrolPoint);
+		DrawDebugSphere(GetWorld(), WorldPatrolPoint, 25, 100, FColor::Red, true);
+
+		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint2"), WorldPatrolPoint2);
+		DrawDebugSphere(GetWorld(), WorldPatrolPoint2, 25, 100, FColor::Red, true);
+
+
 		EnemyController->RunBehaviorTree(BehaviorTree);
 	}
 }
@@ -119,6 +130,18 @@ void AEnemy::UpdateHitNumbers()
 			Location, 
 			ScreenPosition);
 		HitNumber->SetPositionInViewport(ScreenPosition);
+	}
+}
+
+void AEnemy::AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor == nullptr) {
+		return;
+	}
+
+	AShooterCharacter* Character = Cast<AShooterCharacter>(OtherActor);
+	if (Character) {
+		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
 	}
 }
 
