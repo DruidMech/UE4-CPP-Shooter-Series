@@ -31,14 +31,19 @@ AEnemy::AEnemy() :
 	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
 	AgroSphere->SetupAttachment(GetRootComponent());
 
+	CombatRangeSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CombatSphere"));
+	CombatRangeSphere->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
-void AEnemy::BeginPlay()
-{
+void AEnemy::BeginPlay() {
 	Super::BeginPlay();
 
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::AgroSphereOverlap);
+
+	CombatRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatRangeSphereOverlap);
+	CombatRangeSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatRangeSphereEndOverlap);
+
 	
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
@@ -153,6 +158,36 @@ void AEnemy::AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	if (Character) {
 		UE_LOG(LogTemp, Warning, TEXT("Here"));
 		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
+	}
+}
+
+void AEnemy::CombatRangeSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+	if (OtherActor == nullptr) {
+		return;
+	}
+
+	auto ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
+	if (ShooterCharacter) {
+		bAttackRange = true;
+
+		if (EnemyController) {
+			EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("Is In Attack Range"), true);
+		}
+	}
+}
+
+void AEnemy::CombatRangeSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+	if (OtherActor == nullptr) {
+		return;
+	}
+
+	auto ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
+	if (ShooterCharacter) {
+		bAttackRange = false;
+
+		if (EnemyController) {
+			EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("Is In Attack Range"), false);
+		}
 	}
 }
 
