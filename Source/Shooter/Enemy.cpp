@@ -21,7 +21,9 @@ AEnemy::AEnemy() :
 	bCanHitReact(true),
 	HitReactTimeMin(.5f),
 	HitReactTimeMax(3.f),
-	HitNumberDestroyTime(1.5f)
+	HitNumberDestroyTime(1.5f),
+	bStunned(false),
+	StunChance(0.5f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -133,6 +135,14 @@ void AEnemy::UpdateHitNumbers()
 	}
 }
 
+void AEnemy::SetStunned(bool Stunned)
+{
+	bStunned = Stunned;
+	if (EnemyController) {
+		EnemyController->GetBlackboardComponent()->SetValueAsBool("Stunned", Stunned);
+	}
+}
+
 void AEnemy::AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor == nullptr) {
@@ -141,6 +151,7 @@ void AEnemy::AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 	AShooterCharacter* Character = Cast<AShooterCharacter>(OtherActor);
 	if (Character) {
+		UE_LOG(LogTemp, Warning, TEXT("Here"));
 		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
 	}
 }
@@ -171,7 +182,12 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, HitResult.Location, FRotator(0.f), true);
 	}
 	ShowHealthBar();
-	PlayHitMontage(FName("HitReactFront"));
+
+	float Stunned = FMath::FRandRange(0.f, 1.f);
+	if (Stunned < StunChance) {
+		SetStunned(true);
+		PlayHitMontage(FName("HitReactFront"));
+	}
 }
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
