@@ -23,7 +23,11 @@ AEnemy::AEnemy() :
 	HitReactTimeMax(3.f),
 	HitNumberDestroyTime(1.5f),
 	bStunned(false),
-	StunChance(0.5f)
+	StunChance(0.5f),
+	AttackLNormal(TEXT("AttackLNormal")),
+	AttackLFast(TEXT("AttackLFast")),
+	AttackRNormal(TEXT("AttackRNormal")),
+	AttackRFast(TEXT("AttackRFast"))
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -189,6 +193,36 @@ void AEnemy::CombatRangeSphereEndOverlap(UPrimitiveComponent* OverlappedComponen
 			EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("Is In Attack Range"), false);
 		}
 	}
+}
+
+void AEnemy::PlayAttackMontage(FName Section, float PlayRate)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AttackMontage) {
+		AnimInstance->Montage_Play(AttackMontage);
+		AnimInstance->Montage_JumpToSection(Section, AttackMontage);
+	}
+}
+
+FName AEnemy::GetAttackSectionName()
+{
+	FName SectionName;
+	const int32 Section{ FMath::RandRange(1, 4) };
+	switch (Section)
+	{
+	case 1:
+		SectionName = AttackLFast;
+		break;
+	case 2:
+		SectionName = AttackLNormal;
+		break;
+	case 3:
+		SectionName = AttackRFast;
+		break;
+	case 4:
+		SectionName = AttackRNormal;
+	}
+	return SectionName;
 }
 
 // Called every frame

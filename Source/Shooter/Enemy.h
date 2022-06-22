@@ -52,6 +52,13 @@ protected:
 
 	UFUNCTION()
 	void CombatRangeSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void PlayAttackMontage(FName Section, float PlayRate = 1.0f);
+
+	UFUNCTION(BlueprintPure)
+	FName GetAttackSectionName();
+
 private:
 	/** Particles to spawn when hit by bullets */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
@@ -126,6 +133,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	class USphereComponent* CombatRangeSphere;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* AttackMontage;
+
+	FName AttackLNormal;
+	FName AttackLFast;
+	FName AttackRNormal;
+	FName AttackRFast;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
