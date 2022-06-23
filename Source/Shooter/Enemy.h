@@ -59,6 +59,23 @@ protected:
 	UFUNCTION(BlueprintPure)
 	FName GetAttackSectionName();
 
+	UFUNCTION()
+	void OnLeftWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnRightWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintCallable)
+	void ActivateLeftWeaponCollision();
+
+	UFUNCTION(BlueprintCallable)
+	void DeactivateLeftWeaponCollision();
+	
+	UFUNCTION(BlueprintCallable)
+	void ActivateRightWeaponCollision();
+
+	UFUNCTION(BlueprintCallable)
+	void DeactivateRightWeaponCollision();
 private:
 	/** Particles to spawn when hit by bullets */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
@@ -141,6 +158,12 @@ private:
 	FName AttackLFast;
 	FName AttackRNormal;
 	FName AttackRFast;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true") )
+	class UBoxComponent* LeftWeaponCollision;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true") )
+	UBoxComponent* RightWeaponCollision;
 
 public:	
 	// Called every frame
