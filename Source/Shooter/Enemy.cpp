@@ -15,6 +15,8 @@
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/BoxComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
 AEnemy::AEnemy() :
@@ -31,7 +33,12 @@ AEnemy::AEnemy() :
 	AttackLFast(TEXT("AttackLFast")),
 	AttackRNormal(TEXT("AttackRNormal")),
 	AttackRFast(TEXT("AttackRFast")),
-	BaseDamage(20.f)
+	BaseDamage(20.f),
+	LeftWeaponSocket(TEXT("FX_Trail_L_01")),
+	RightWeaponSocket(TEXT("FX_Trail_R_01")),
+	bCanAttack(true),
+	AttackWaitTime(1.5f),
+	bDying(false)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -85,6 +92,8 @@ void AEnemy::BeginPlay()
 
 	if (EnemyController)
 	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), true);
+		
 		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint"), WorldPatrolPoint);
 		DrawDebugSphere(GetWorld(), WorldPatrolPoint, 25, 100, FColor::Red, true);
 
@@ -108,7 +117,21 @@ void AEnemy::ShowHealthBar_Implementation()
 
 void AEnemy::Die()
 {
+	if (bDying) return;
+	
+	bDying = true;
 	HideHealthBar();
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+	}
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+		EnemyController->StopMovement();
+	}
 }
 
 void AEnemy::PlayHitMontage(FName Section, float PlayRate)
@@ -247,6 +270,16 @@ void AEnemy::PlayAttackMontage(FName Section, float PlayRate)
 		AnimInstance->Montage_Play(AttackMontage);
 		AnimInstance->Montage_JumpToSection(Section, AttackMontage);
 	}
+	bCanAttack = false;
+	GetWorldTimerManager().SetTimer(
+		AttackWaitTimer,
+		this,
+		&AEnemy::ResetCanAttack,
+		AttackWaitTime);
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), false);
+	}
 }
 
 FName AEnemy::GetAttackSectionName()
@@ -270,32 +303,89 @@ FName AEnemy::GetAttackSectionName()
 	return SectionName;
 }
 
-void AEnemy::DoDamage(AActor* Victim)
+void AEnemy::DoDamage(AShooterCharacter* Victim)
 {
 	if (Victim == nullptr)
 	{
 		return;
 	}
+	
+	UGameplayStatics::ApplyDamage(Victim, BaseDamage, EnemyController, this, UDamageType::StaticClass());
+}
 
-	auto ShooterCharacter = Cast<AShooterCharacter>(Victim);
-	if (ShooterCharacter)
+void AEnemy::SpawnBloodParticle(const AShooterCharacter* ShooterCharacter, FName SocketName)
+{
+	const USkeletalMeshSocket* TipSocket{GetMesh()->GetSocketByName(SocketName)};
+	if (TipSocket)
 	{
-		UGameplayStatics::ApplyDamage(ShooterCharacter, BaseDamage, EnemyController, this, UDamageType::StaticClass());
+		const FTransform SocketTransform{TipSocket->GetSocketTransform(GetMesh())};
+		if (ShooterCharacter->GetBloodParticle())
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				ShooterCharacter->GetBloodParticle(),
+				SocketTransform
+				);
+		}
 	}
+}
+
+void AEnemy::StunCharacter(AShooterCharacter* Victim)
+{
+	if (Victim)
+	{
+		const float Stun = FMath::FRandRange(0.f, 1.f);
+		if (Stun <= Victim->GetStunChance())
+		{
+			Victim->Stun();
+		}
+	}
+}
+
+void AEnemy::ResetCanAttack()
+{
+	bCanAttack = true;
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), true);
+	}
+}
+
+void AEnemy::DestroyEnemy()
+{
+	Destroy();
+}
+
+void AEnemy::FinishDeath()
+{
+	GetMesh()->bPauseAnims = true;
+	GetWorldTimerManager().SetTimer(DeathTimer, this, &AEnemy::DestroyEnemy, DeathTime);
 }
 
 void AEnemy::OnLeftWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                  const FHitResult& SweepResult)
 {
-	DoDamage(OtherActor);
+	auto ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
+	if(ShooterCharacter)
+	{
+		DoDamage(ShooterCharacter);
+		SpawnBloodParticle(ShooterCharacter, LeftWeaponSocket);
+		StunCharacter(ShooterCharacter);
+	}
 }
 
 void AEnemy::OnRightWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                   const FHitResult& SweepResult)
 {
-	DoDamage(OtherActor);
+	auto ShooterCharacter = Cast<AShooterCharacter>(OtherActor);
+	if(ShooterCharacter)
+	{
+		DoDamage(ShooterCharacter);
+		SpawnBloodParticle(ShooterCharacter, RightWeaponSocket);
+		StunCharacter(ShooterCharacter);
+	}
 }
 
 void AEnemy::ActivateLeftWeaponCollision()
@@ -345,7 +435,7 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 	ShowHealthBar();
 
 	float Stunned = FMath::FRandRange(0.f, 1.f);
-	if (Stunned < StunChance)
+	if (Stunned < StunChance && !bDying)
 	{
 		SetStunned(true);
 		PlayHitMontage(FName("HitReactFront"));
@@ -355,6 +445,11 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
                          AActor* DamageCauser)
 {
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsObject(FName("Target"), DamageCauser);
+	}
+	
 	if (Health - DamageAmount <= 0.f)
 	{
 		Health = 0.f;
@@ -364,5 +459,6 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	{
 		Health -= DamageAmount;
 	}
+	
 	return DamageAmount;
 }
